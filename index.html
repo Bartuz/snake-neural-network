@@ -2,9 +2,18 @@
   <head>
     <title>Snake AI - A neural network and neuro-evolution experiment</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" type="text/css" href="https://rawgit.com/wagenaartje/neataptic/master/graph/graph.css">
   </head>
   <body>
     <div id="wrapper">
+      <div class="controls">
+        <button id="pause">Pause</button>
+        <button id="unpause">Unpause</button>
+        <button id="rendering">Render</button>
+      </div>
+      <div id="netgraph-wrapper">
+        <svg class="netgraph" width="1000px" height="1000px"/>
+      </div>
       <div id="chart"></div>
       <div id="status">
         <p>generation<br><span id="generation">0</span></p>
@@ -12,6 +21,10 @@
       </div>
     </div>
 
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="https://cdn.rawgit.com/wagenaartje/neataptic/b0c454af/mkdocs/theme/js/articles/neuroevolution/webcola.js"></script>
+    <script src="https://cdn.rawgit.com/wagenaartje/neataptic/b0c454af/graph/graph.js"></script>
     <script src="lib/neataptic.min.js"></script>
     <script src="lib/p5.min.js"></script>
     <script src="lib/frappe-charts.min.iife.js"></script>

@@ -1,6 +1,5 @@
 class Runner {
-
-  constructor ({neat, games, gameSize, gameUnit, frameRate, maxTurns, lowestScoreAllowed, score, onEndGeneration}) {
+  constructor ({neat, games, gameSize, gameUnit, frameRate, maxTurns, lowestScoreAllowed, score, onEndGeneration, snakeStartingLength}) {
     this.neat = neat
     this.games = []
     this.gamesFinished = 0
@@ -10,12 +9,31 @@ class Runner {
       this.games.push(new Game({
         size: gameSize,
         unit: gameUnit,
+        snakeStartingLength: snakeStartingLength,
         frameRate,
         maxTurns,
         lowestScoreAllowed,
         score,
         onGameOver: () => this.endGeneration()
       }))
+    }
+  }
+
+  pause () {
+    for (let game of this.games) {
+      game.pause()
+    }
+  }
+
+  unpause () {
+    for (let game of this.games) {
+      game.unpause()
+    }
+  }
+
+  toggleRender () {
+    for (let game of this.games) {
+      game.toggleRender()
     }
   }
 
@@ -36,12 +54,13 @@ class Runner {
     }
 
     this.neat.sort()
-
+    const bestGenome = this.neat.population[0]
     this.onEndGeneration({
       generation: this.neat.generation,
-      max: this.neat.getFittest().score,
+      max: bestGenome.score,
       avg: Math.round(this.neat.getAverage()),
-      min: this.neat.population[this.neat.popsize - 1].score
+      min: this.neat.population[this.neat.popsize - 1].score,
+      netGraph: bestGenome.graph(450, 450)
     })
 
     const newGeneration = []

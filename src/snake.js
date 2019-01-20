@@ -1,19 +1,36 @@
 class Snake {
-
-  constructor (score) {
+  constructor (startingLength, score) {
     this.scoreModifiers = score
+    this.startingLength = startingLength
   }
 
   reset () {
-    this.segments = [
-      [1, 1],
-      [2, 1],
-      [3, 1],
-      [4, 1],
-      [5, 1]
-    ]
+    this.segments = []
+    for (let x = 0; x < this.startingLength; x++) {
+      this.segments.push([x + 1, 1])
+    }
     this.direction = 'right'
     this.isEating = false
+  }
+
+  isOutOfTheGrid(unitsPerRow) {
+      const snakeHead = this.getHeadPosition()
+      return snakeHead[0] < 1 || snakeHead[0] > unitsPerRow || snakeHead[1] < 1 || snakeHead[1] > unitsPerRow
+  }
+
+  isHitItself() {
+      return this.segments.some((segment, i) => {
+        const headPosition = this.getHeadPosition()
+        return segment[0] === headPosition[0] && segment[1] === headPosition[1] && i !== this.getHeadIndex()
+      })
+  }
+
+  getHeadPosition() {
+    return this.segments[this.getHeadIndex()]
+  }
+
+  getHeadIndex() {
+    return this.segments.length - 1
   }
 
   move (game) {
@@ -24,7 +41,7 @@ class Snake {
     let isFoodLeft = 0
     let isFoodRight = 0
 
-    let head = this.segments[this.segments.length - 1]
+    let head = this.getHeadPosition()
 
     // assess the environment to get the input for the neural network
 
@@ -150,8 +167,6 @@ class Snake {
           break
       }
     }
-
-    head = this.segments[this.segments.length - 1]
 
     if (game.food.position[0] === head[0] && game.food.position[1] === head[1]) {
       this.isEating = true

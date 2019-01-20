@@ -1,6 +1,10 @@
-class Game {
+const GAME_OVER = 'GAME_OVER'
+const IDLE = 'IDLE'
+const RUNNING ='RUNNING'
+const PAUSED = 'PAUSED'
 
-  constructor ({size, unit, frameRate, maxTurns, lowestScoreAllowed, score, onGameOver}) {
+class Game {
+  constructor ({size, unit, frameRate, maxTurns, lowestScoreAllowed, score, onGameOver, snakeStartingLength, foodsCount}) {
     this.size = size
     this.unit = unit
     this.unitsPerRow = this.size / this.unit
@@ -8,10 +12,11 @@ class Game {
     this.maxTurns = maxTurns
     this.lowestScoreAllowed = lowestScoreAllowed
     this.onGameOver = onGameOver
-    this.status = 'IDLE'
+    this.status = IDLE
     this.grid = []
-    this.snake = new Snake(score)
+    this.snake = new Snake(snakeStartingLength, score)
     this.turns = 0
+    this.rendering = true
 
     for (let x = 0; x < this.unitsPerRow; x++) {
       for (let y = 0; y < this.unitsPerRow; y++) {
@@ -30,7 +35,9 @@ class Game {
       p.drawFood = () => {
         p.fill('red')
         p.rect(
+          // x
           game.food.position[0] * game.unit - game.unit,
+          // y
           game.food.position[1] * game.unit - game.unit,
           game.unit,
           game.unit
@@ -39,18 +46,23 @@ class Game {
 
       p.drawSnake = () => {
         p.fill('black')
-        game.snake.segments.forEach(s => {
+        game.snake.segments.forEach(snakePart => {
           p.rect(
-            s[0] * game.unit - game.unit,
-            s[1] * game.unit - game.unit,
+            snakePart[0] * game.unit - game.unit,
+            snakePart[1] * game.unit - game.unit,
             game.unit,
             game.unit
           )
         })
       }
 
+
       p.draw = () => {
-        if (['IDLE', 'GAME_OVER'].indexOf(game.status) !== -1) {
+        if (game.isPaused()) {
+          return
+        }
+
+        if (!game.isPlaying()) {
           p.background('#EEE')
           p.fill(0)
           p.textSize(15)
@@ -68,33 +80,42 @@ class Game {
 
         game.updateGameStatus()
 
-        if (game.status === 'GAME_OVER') {
+        if (game.status === GAME_OVER) {
           return game.onGameOver()
         }
 
-        p.drawSnake()
-        p.drawFood()
+        if (game.rendering) {
+          p.drawSnake()
+          p.drawFood()
+        }
 
         game.turns++
       }
     }, 'wrapper')
   }
 
+  isPlaying() {
+    return this.status === RUNNING
+  }
+
+  isPaused() {
+    return this.status === PAUSED
+  }
+
   updateGameStatus () {
-    const snakeHeadIndex = this.snake.segments.length - 1
-    const snakeHead = this.snake.segments[snakeHeadIndex]
-    const snakeHitWall = snakeHead[0] < 1 || snakeHead[0] > this.unitsPerRow || snakeHead[1] < 1 || snakeHead[1] > this.unitsPerRow
-    const snakeHitTail = this.snake.segments.some((s, i) => s[0] === snakeHead[0] && s[1] === snakeHead[1] && i !== snakeHeadIndex)
+    const snakeHitWall = this.snake.isOutOfTheGrid(this.unitsPerRow)
+    const snakeHitTail = this.snake.isHitItself()
     const noMoreRoomLeft = this.getAvailablePositions().length === 1
     const gameLastedLongEnough = this.turns > this.maxTurns
     const scoreTooLow = this.snake.brain.score <= this.lowestScoreAllowed
 
     if (snakeHitWall || snakeHitTail || noMoreRoomLeft || gameLastedLongEnough || scoreTooLow) {
-      this.status = 'GAME_OVER'
+      this.status = GAME_OVER
     }
   }
 
   getAvailablePositions () {
+    // grid without snake segments
     return this.grid.filter(position => {
       return !this.snake.segments.some(segment => {
         return position[0] === segment[0] && position[1] === segment[1]
@@ -106,7 +127,19 @@ class Game {
     this.turns = 0
     this.snake.reset()
     this.food = new Food(this)
-    this.status = 'RUNNING'
+    this.status = RUNNING
+  }
+
+  pause () {
+    this.status = this.status === RUNNING ? PAUSED : this.status
+  }
+
+  unpause () {
+    this.status = this.status === PAUSED ? RUNNING : this.status
+  }
+
+  toggleRender () {
+    this.rendering = !this.rendering
   }
 
 }
